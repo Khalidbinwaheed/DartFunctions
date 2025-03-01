@@ -1,109 +1,129 @@
 import 'dart:io';
 
 void main() {
-  calculator();
+  CalculatorApp().run();
 }
 
-void calculator() {
-  bool keepRunning = true;
+class CalculatorApp {
+  void run() {
+    bool keepRunning = true;
 
-  while (keepRunning) {
-    print("\nSelect operation:");
+    while (keepRunning) {
+      _displayMenu();
+      int? operation = _getOperationChoice();
+
+      if (operation == null)
+        continue; // Input validation handled in _getOperationChoice
+      if (operation == 5) {
+        keepRunning = false;
+        _displayExitMessage();
+        break;
+      }
+
+      double? num1 = _getNumberInput("Enter first number: ");
+      if (num1 == null) continue;
+
+      double? num2 = _getNumberInput("Enter second number: ");
+      if (num2 == null) continue;
+
+      double? result = _performCalculation(operation, num1, num2);
+      if (result != null) {
+        _displayResult(result);
+      }
+    }
+  }
+
+  void _displayMenu() {
+    print("\n--- Calculator ---");
     print("1. Add");
     print("2. Subtract");
     print("3. Multiply");
     print("4. Divide");
     print("5. Exit");
+    print("------------------");
+  }
 
+  int? _getOperationChoice() {
     stdout.write("Enter choice (1/2/3/4/5): ");
     String? choice = stdin.readLineSync();
 
     if (choice == null || choice.isEmpty) {
-      print("Invalid input. Please enter a number between 1 and 5.");
-      continue; // Restart the loop
+      _displayErrorMessage(
+        "Invalid input. Please enter a number between 1 and 5.",
+      );
+      return null;
     }
 
-    int? operation;
     try {
-      operation = int.parse(choice);
+      int operation = int.parse(choice);
       if (operation < 1 || operation > 5) {
-        print("Invalid input. Please enter a number between 1 and 5.");
-        continue;
+        _displayErrorMessage(
+          "Invalid input. Please enter a number between 1 and 5.",
+        );
+        return null;
       }
+      return operation;
     } catch (e) {
-      print("Invalid input. Please enter a number.");
-      continue; // Restart the loop if the input is not a number
+      _displayErrorMessage("Invalid input. Please enter a number.");
+      return null;
     }
+  }
 
+  double? _getNumberInput(String prompt) {
+    stdout.write(prompt);
+    String? input = stdin.readLineSync();
+    return _parseNumber(input);
+  }
 
-    if (operation == 5) {
-      keepRunning = false;
-      print("Exiting calculator.");
-      break; // Exit the loop and the program
+  double? _parseNumber(String? input) {
+    if (input == null || input.isEmpty) {
+      _displayErrorMessage("Error: Input cannot be empty.");
+      return null;
     }
+    try {
+      return double.parse(input);
+    } catch (e) {
+      _displayErrorMessage("Error: Invalid number format.");
+      return null;
+    }
+  }
 
-    stdout.write("Enter first number: ");
-    String? num1Str = stdin.readLineSync();
-    double? num1 = _parseNumber(num1Str);
-    if (num1 == null) continue; // Go back to the beginning of the loop if parsing failed
-
-    stdout.write("Enter second number: ");
-    String? num2Str = stdin.readLineSync();
-    double? num2 = _parseNumber(num2Str);
-    if (num2 == null) continue;  // Go back to the beginning of the loop if parsing failed
-
-    double? result;
-
+  double? _performCalculation(int operation, double num1, double num2) {
     switch (operation) {
       case 1:
-        result = add(num1, num2);
-        break;
+        return _add(num1, num2);
       case 2:
-        result = subtract(num1, num2);
-        break;
+        return _subtract(num1, num2);
       case 3:
-        result = multiply(num1, num2);
-        break;
+        return _multiply(num1, num2);
       case 4:
         if (num2 == 0) {
-          print("Error: Division by zero.");
-          continue; // Go to the next iteration of the loop
+          _displayErrorMessage("Error: Division by zero.");
+          return null;
         }
-        result = divide(num1, num2);
-        break;
+        return _divide(num1, num2);
+      default:
+        _displayErrorMessage(
+          "Invalid operation.",
+        ); // Should not happen, but good practice
+        return null;
     }
-
-    if (result != null) {
-      print("Result: $result");
-    }
   }
-}
 
-double? _parseNumber(String? input) {
-  if (input == null || input.isEmpty) {
-    print("Error: Input cannot be empty.");
-    return null;
+  double _add(double a, double b) => a + b;
+  double _subtract(double a, double b) => a - b;
+  double _multiply(double a, double b) => a * b;
+  double _divide(double a, double b) => a / b;
+
+  void _displayResult(double result) {
+    print("Result: $result");
   }
-  try {
-    return double.parse(input);
-  } catch (e) {
-    print("Error: Invalid number format.");
-    return null;
+
+  void _displayErrorMessage(String message) {
+    print("ERROR: $message");
   }
-}
 
-double add(double a, double b) {
-  return a + b;
-}
-
-double subtract(double a, double b) {
-  return a - b;
-}
-
-double multiply(double a, double b) {
-  return a * b;
-}
-
-double divide(double a, double b) {
-  return a / b;
+  void _displayExitMessage() {
+    print("Exiting calculator. Goodbye!");
+  }
 }
